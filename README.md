@@ -1,6 +1,6 @@
 <img src="https://skillicons.dev/icons?i=powershell,bash,python&perline=10" alt="Sistemas Operacionais" />
 
-## Scripts & Automations
+## Scripts & Automações
 
 > Este repositório tem como objetivo guardar armazenar scripts de automação e produtividade utilizando Bash, PowerShell & Python.
 
