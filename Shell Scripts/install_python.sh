@@ -8,8 +8,8 @@ PYTHON_VERSION=$(python3 --version 2>/dev/null)
 
 
 function install_python() {
-        echo -e "\n👽"
-        # apt install python3 python3-venv python3-pip -y
+        echo -e "\nIniciando instalação..."
+        sudo apt install python3 python3-venv python3-pip -y
 }
 
 
@@ -35,7 +35,6 @@ if [ -z "$PYTHON_VERSION" ]; then
         read -p "Deseja instalar o prosseguir com a instalação do Python3? S (Sim) ou N (Não): " confirm
 
         if [ "$confirm" == "S" ]; then
-                echo -e "\nIniciando instalação..."
                 install_python
         elif [ "$confirm" == "N" ]; then
                 echo -e "\nCancelando instalação"
