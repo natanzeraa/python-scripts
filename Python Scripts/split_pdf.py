@@ -24,7 +24,7 @@ doc = fitz.open(args.document)
 for i in range(len(doc)):
     new_pdf = fitz.open()
     new_pdf.insert_pdf(doc, from_page=i, to_page=i)
-    output_file = os.path.join(output_folder, f"pagina_{i+1}.pdf")  
+    output_file = os.path.join(output_folder, f"pagina_{i + 1}.pdf")
     new_pdf.save(output_file)
     new_pdf.close()
 
