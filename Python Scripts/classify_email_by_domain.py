@@ -39,7 +39,7 @@ def create_database(csv_file):
     """)
 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS emails (
+        CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             email TEXT UNIQUE,
@@ -64,7 +64,7 @@ def create_database(csv_file):
         # Insere o e-mail com o ID do domínio
         try:
             cursor.execute("""
-                INSERT INTO emails (name, email, domain_id)
+                INSERT INTO users (name, email, domain_id)
                 VALUES (?, ?, ?)
             """, (row['nome'], row['email'], domain_id))
         except sqlite3.IntegrityError:
