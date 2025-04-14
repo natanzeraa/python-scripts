@@ -1,8 +1,13 @@
+# Crie essas duas pastas dentro da pasta Python Scripts
+# Dentro de input insira tudo que vai enviar dados para o script
+# Dentro de output insira tudo que vai ser gravado em arquivo de saída
+input/
+output/
+
 **/.venv/
 **/venv/
 *.pdf
 *.rar
-output/
 *.env
 *.db
 *.xlsx
