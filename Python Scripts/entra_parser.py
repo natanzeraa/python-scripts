@@ -6,8 +6,6 @@ import argparse
 import os
 import logging
 
-# Link do chat para solucionar bugs
-# https://chatgpt.com/share/6808d289-bcdc-800b-90e1-da9510385177
 
 # Configura o logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
