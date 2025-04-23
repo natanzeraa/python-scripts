@@ -6,6 +6,9 @@ import argparse
 import os
 import logging
 
+# Link do chat para solucionar bugs
+# https://chatgpt.com/share/6808d289-bcdc-800b-90e1-da9510385177
+
 # Configura o logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger_duplicates = logging.getLogger('duplicates')
@@ -29,9 +32,9 @@ def extract_users(input_path):
         columns = line.split(';')
 
         if len(columns) >= 4:
-            name = columns[0].strip()
+            display_name = columns[0].strip()
             entra_id = columns[1].strip()
-            email = columns[2].strip()
+            mail = columns[2].strip()
             upn = columns[3].strip()
 
             # Extrair domínio do UPN
@@ -39,10 +42,10 @@ def extract_users(input_path):
             domain = domain_match.group(1).lower() if domain_match else ""
 
             # Extrair a licença se existir (se existir mais de 4 colunas, assume que é a licença)
-            license = columns[4].strip() if len(columns) > 4 else ""
+            license = columns[4].strip() if len(columns) > 4 and columns[4].strip() else "UNLICENSED"
 
             # Adiciona a linha à lista de dados
-            rows.append([name, entra_id, email, upn, domain, license])
+            rows.append([display_name, entra_id, mail, upn, domain, license])
 
     return rows
 
@@ -51,7 +54,7 @@ def save_to_csv(rows, output_path):
     """Salva os dados dos usuários em formato CSV."""
     with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["name", "entra_id", "email", "upn", "domain", "license"])
+        writer.writerow(["display_name", "entra_id", "mail", "upn", "domain", "license"])
         writer.writerows(rows)
 
 
@@ -66,10 +69,10 @@ def create_tables(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            entra_id TEXT UNIQUE,
-            email TEXT UNIQUE,
-            upn TEXT UNIQUE,
+            display_name TEXT,
+            entra_id TEXT,
+            mail TEXT,
+            upn TEXT,
             domain_id INTEGER,
             license TEXT NOT NULL,
             FOREIGN KEY(domain_id) REFERENCES domains(id)
@@ -92,11 +95,11 @@ def import_domains(cursor, domain_file):
 def insert_users(cursor, df):
     """Insere os usuários no banco de dados e associa com seus respectivos domínios."""
     for _, row in df.iterrows():
-        # Garantir que o campo 'email' seja uma string e que não seja NaN
-        email = str(row['email']).strip() if pd.notnull(row['email']) else ''
+        # Garantir que o campo 'mail' seja uma string e que não seja NaN
+        mail = str(row['mail']).strip() if pd.notnull(row['mail']) else ''
 
         # Extrair o domínio do e-mail
-        domain = email.split('@')[1].strip() if '@' in email else ''
+        domain = mail.split('@')[1].strip() if '@' in mail else ''
 
         cursor.execute("SELECT id FROM domains WHERE name = ?", (domain,))
         result = cursor.fetchone()
@@ -107,23 +110,23 @@ def insert_users(cursor, df):
             cursor.execute("INSERT INTO domains (name) VALUES (?)", (domain,))
             domain_id = cursor.lastrowid
 
-        # Verifica se o usuário já existe no banco (evita duplicação de entra_id, email, ou upn)
-        cursor.execute("""
-            SELECT 1 FROM users WHERE entra_id = ? OR email = ? OR upn = ? 
-        """, (row['entra_id'], email, row['upn']))
+        # Verifica se o usuário já existe no banco (evita duplicação de entra_id, mail, ou upn)
+        # cursor.execute("""
+        #     SELECT 1 FROM users WHERE entra_id = ? OR mail = ? OR upn = ?
+        # """, (row['entra_id'], mail, row['upn']))
 
-        if cursor.fetchone():
-            logger_duplicates.info(f"Duplicado ignorado: {row['name']}, {row['entra_id']}, {email}, {row['upn']}, {domain}, {row.get('license', 'UNLICENSED')}")
-            continue  # Se o usuário já existir, ignora a inserção
+        # if cursor.fetchone():
+        #     logger_duplicates.info(f"Duplicado ignorado: {row['display_name']}, {row['entra_id']}, {mail}, {row['upn']}, {domain}, {row.get('license', '')}")
+        #     continue  # Se o usuário já existir, ignora a inserção
 
         try:
             cursor.execute("""
-                INSERT INTO users (name, entra_id, email, upn, domain_id, license)
+                INSERT INTO users (display_name, entra_id, mail, upn, domain_id, license)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (row['name'], row['entra_id'], email, row['upn'], domain_id, row.get('license', '')))
+            """, (row['display_name'], row['entra_id'], mail, row['upn'], domain_id, row.get('license', '')))
         except sqlite3.IntegrityError as e:
             logging.error(f"🔴 Erro ao inserir dados no banco: {e}")
-            logger_duplicates.info(f"Erro ao inserir (IntegrityError): {row['name']}, {row['entra_id']}, {email}, {row['upn']}, {domain}, {row.get('license', 'UNLICENSED')}")
+            # logger_duplicates.info(f"Erro ao inserir (IntegrityError): {row['display_name']}, {row['entra_id']}, {mail}, {row['upn']}, {domain}, {row.get('license', 'UNLICENSED')}")
             continue
 
 
