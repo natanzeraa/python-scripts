@@ -13,6 +13,6 @@ def clean_domains(input_path, output_path):
             f.write(domain + "\n")
 
 
-input = "input/dominios.txt"
-output = "output/dominios_sem_duplicacoes.txt"
+input = "input/domains.txt"
+output = "output/domains.txt"
 clean_domains(input, output)
