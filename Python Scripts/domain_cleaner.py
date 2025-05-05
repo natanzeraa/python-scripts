@@ -31,7 +31,7 @@ def clean_domains(input_path, output_path, suffixes_path):
             f.write(domain + "\n")
 
 
-input_path = "input/dominios.txt"
-output_path = "output/dominios_sem_extensao.txt"
+input_path = "input/domains.txt"
+output_path = "output/domains.txt"
 suffixes_path = "input/suffixes.txt"
 clean_domains(input_path, output_path, suffixes_path)
