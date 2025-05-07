@@ -28,6 +28,36 @@ function Show-Progress($current, $total) {
         -PercentComplete (($current / $total) * 100)
 }
 
+function Measure-AllMailboxesSize {
+    param (
+        [Parameter(Mandatory)]
+        $mailboxesData
+    )
+
+    $totalBytes = ($mailboxesData | Measure-Object -Property TamanhoEmBytes -Sum).Sum
+    $totalGB = [math]::Round($totalBytes / 1GB, 2)
+    $totalTB = [math]::Round($totalBytes / 1TB, 2)
+
+    Write-Host "`nUso total de todas as caixas de e-mail: $totalBytes bytes (~$totalGB GB) (~$totalTB TB)" -ForegroundColor Cyan
+}
+
+function Measure-RankedMailboxesSize {
+    param (
+        [Parameter(Mandatory)]
+        $mailboxesData,
+
+        [Parameter(Mandatory)]
+        [int]$rankingCount
+    )
+
+    $totalBytes = ($mailboxesData | Measure-Object -Property TamanhoEmBytes -Sum).Sum
+    $totalGB = [math]::Round($totalBytes / 1GB, 2)
+    $totalTB = [math]::Round($totalBytes / 1TB, 2)
+
+    Write-Host "`nUso total das $rankingCount maiores caixas de e-mail: $totalBytes bytes (~$totalGB GB) (~$totalTB TB)" -ForegroundColor DarkMagenta
+}
+
+
 # Função: coleta estatísticas das caixas e monta ranking
 function Get-MailboxUsageReport {
     $results = @()
@@ -52,7 +82,6 @@ function Get-MailboxUsageReport {
                 else { 0 }
 
                 $results += [PSCustomObject]@{
-                    "#"            = $current
                     Name           = $mailbox.DisplayName
                     Email          = $mailbox.UserPrincipalName
                     Tamanho        = $stats.TotalItemSize
@@ -76,6 +105,12 @@ function Get-MailboxUsageReport {
 
     Write-Host "`nTop $topRankingCount caixas de e-mail mais ocupadas:`n" -ForegroundColor Yellow
     $topMailboxes | Select-Object Name, Email, Tamanho, Emails | Format-Table -AutoSize
+
+    # Exibe ranking
+    Measure-RankedMailboxesSize -mailboxesData $topMailboxes -rankingCount $topRankingCount
+
+    # Exibe total geral
+    Measure-AllMailboxesSize -mailboxesData $results
 
     # Exporta CSV
     $csvDir = Join-Path $PSScriptRoot "..\output"
