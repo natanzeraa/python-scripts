@@ -1,4 +1,7 @@
-﻿Clear-Host
+﻿# - Acesse a documentação do script através do link abaixo 👇
+# - https://github.com/natanzeraa/scripts-and-automation/blob/main/README/PowerShell/GetExchangeMailBoxSize.md
+
+Clear-Host
 Write-Host "`nIniciando coleta de caixas de e-mail..."
 
 # Coleta inicial
