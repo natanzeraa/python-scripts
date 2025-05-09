@@ -59,7 +59,7 @@ Connect-ExchangeOnline -UserPrincipalName seu_usuario@dominio.com
 3. Execute o script:
 
 ```powershell
-.\coleta_caixas.ps1
+.\GetExchangeMailBoxSize.ps1
 ```
 
 4. Quando solicitado, informe o número de caixas de e-mail mais ocupadas que deseja ver no ranking (por exemplo, `10`).
