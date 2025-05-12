@@ -2,7 +2,7 @@
 # - https://github.com/natanzeraa/scripts-and-automation/blob/main/README/PowerShell/GetExchangeMailBoxSize.md
 
 Clear-Host
-Write-Host "`nIniciando coleta de caixas de e-mail..." -ForegroundColor Gray
+Write-Host "`nIniciando contagem de caixas de e-mail..." -ForegroundColor Gray
 
 # Obtém todas as caixas de e-mail do ambiente Exchange Online
 $mailboxes = Get-Mailbox -ResultSize Unlimited
@@ -128,8 +128,21 @@ function Get-MailboxUsageReport {
     # Ordena e seleciona as caixas mais ocupadas
     $topMailboxes = $results | Sort-Object -Property TamanhoEmBytes -Descending | Select-Object -First $topRankingCount
 
+    # Adiciona ranking numérico
+    $rankedTopMailboxes = $topMailboxes | ForEach-Object -Begin { $i = 1 } -Process {
+        [PSCustomObject]@{
+            Rank = $i
+            Name    = $_.Name
+            Email   = $_.Email
+            Tamanho = $_.Tamanho
+            Emails  = $_.Emails
+        }
+        $i++
+    }
+
+    # Exibe os resultados com ranking
     Write-Host "`nTop $topRankingCount caixas de e-mail mais ocupadas:`n" -ForegroundColor Yellow
-    $topMailboxes | Select-Object Name, Email, Tamanho, Emails | Format-Table -AutoSize
+    $rankedTopMailboxes | Format-Table -AutoSize
 
     # Exibe estatísticas detalhadas
     Measure-RankedMailboxesSize -mailboxesData $topMailboxes -rankingCount $topRankingCount
