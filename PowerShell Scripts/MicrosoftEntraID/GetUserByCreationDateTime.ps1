@@ -74,7 +74,7 @@ function Get-UsersWithCreationDate($users) {
             Write-Host "⚠️ Usuário '$($user.DisplayName)' não possui e-mail válido. Ignorando." -ForegroundColor DarkYellow
 
         }
-    } Write-Host "`nUsuários criados entre $startDateObj e $endDateObj`n" -ForeGroundColor Green
+    } Write-Host "`nUsuários criados/convidados entre $startDateObj e $endDateObj`n" -ForeGroundColor Green
 
     return $results
 }
