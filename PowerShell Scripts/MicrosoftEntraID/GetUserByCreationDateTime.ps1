@@ -1,3 +1,4 @@
+Clear-Host
 Write-Host "`n🪟 Microsoft Entra ID - Filtro por Data de Criação de Usuário"
 Write-Host "--------------------------------------------------------------"
 Write-Host "Este script filtra usuários do Entra ID com base no intervalo de datas da criação da conta.`n"
@@ -6,10 +7,8 @@ Write-Host "🔄 Conectando ao Microsoft Entra ID..."
 Connect-MgGraph -Scopes "User.Read.All"
 Write-Host "✅ Conectado com sucesso!`n"
 
-
 $start = Get-Date
 
-# Função para entrada de data válida
 function Get-ValidDate($prompt) {
     while ($true) {
         $userInput = Read-Host $prompt
@@ -22,45 +21,50 @@ function Get-ValidDate($prompt) {
     }
 }
 
-# Recebe as datas do usuário
+function Show-Progress($current, $total) {
+    Write-Progress -Activity "Buscando usuários" `
+        -Status "$current de $total processado(s) ($([math]::Round(($current / $total) * 100))%)" `
+        -PercentComplete (($current / $total) * 100)
+}
+
 $startDateObj = Get-ValidDate "📅 Insira a data de início (dd-MM-yyyy)"
+
 $endDateObj = Get-ValidDate "📅 Insira a data final (dd-MM-yyyy)"
 
-# Converte para o formato ISO 8601 exigido pela API
 $startDate = $startDateObj.ToString("yyyy-MM-ddTHH:mm:ssZ")
+
 $endDate = $endDateObj.ToString("yyyy-MM-ddTHH:mm:ssZ")
 
 Write-Host "`n🔍 Buscando usuários criados entre: $startDateObj e $endDateObj`n"
 
-# Filtro no padrão OData
 $filter = "createdDateTime ge $startDate and createdDateTime le $endDate"
 
-# Consulta os usuários
 $newUsers = Get-MgUser -Filter $filter -All
 
-# Busca os usuários do EntraID e monta um objeto completo com as informações necessárias
+$newUsersCount = $newUsers.Count
+
 function Get-UsersWithCreationDate($users) {
     $results = @()
     $i = 0
-
+    
     foreach ($item in $users) {
         $userMail = $item.Mail
         $i++
+        
+        Show-Progress -current $i -total $newUsersCount
         
         if (![string]::IsNullOrWhiteSpace($userMail)) {
             try {
                 $fullUser = Get-MgUser -Filter "mail eq '$userMail'" -Property DisplayName, Mail, UserPrincipalName, CreatedDateTime, LastPasswordChangeDateTime, AccountEnabled, UserType
                 $results += [PSCustomObject]@{
-                    Nome                    = $fullUser.DisplayName
-                    Email                   = $fullUSer.Mail
-                    UPN                     = $fullUser.UserPrincipalName
-                    "Data de criação"       = $fullUser.CreatedDateTime
-                    "Última troca de senha" = $fullUser.LastPasswordChangeDateTime
-                    "Conta Ativa"           = $fullUser.AccountEnabled ? "Sim" : "Não"
-                    "UserType"              = $fullUser.UserType
+                    Name                       = $fullUser.DisplayName
+                    Mail                       = $fullUSer.Mail
+                    UPN                        = $fullUser.UserPrincipalName
+                    CreatedDateTime            = $fullUser.CreatedDateTime
+                    LastPasswordChangeDateTime = $fullUser.LastPasswordChangeDateTime
+                    AccountEnabled             = $fullUser.AccountEnabled ? "Sim" : "Não"
+                    UserType                   = if ($fullUser.UserType -eq "Guest") { "Convidado" } else { "Membro" }
                 }
-
-                Write-Host "$($i): $($fullUser.Mail)" -ForegroundColor DarkGray
             }
             catch {
                 Write-Host "❌ Erro ao buscar usuário com e-mail '$userMail': $_" -ForegroundColor Yellow
@@ -75,10 +79,26 @@ function Get-UsersWithCreationDate($users) {
     return $results
 }
 
-$finalResult = Get-UsersWithCreationDate -users $newUsers
-$finalResult | Sort-Object DisplayName | Format-Table -AutoSize
+$outputObj = Get-UsersWithCreationDate -users $newUsers
 
+$table = $outputObj | ForEach-Object -Begin { $i = 1 } -Process {
+    [PSCustomObject]@{
+        "#"               = $i
+        "Nome"            = $_.Name
+        "Email"           = $_.Mail
+        "UPN"             = $_.UPN
+        "Data de criação" = $_.CreatedDateTime
+        "Senha alterada"  = $_.LastPasswordChangeDateTime
+        "Conta ativa"     = $_.AccountEnabled
+        "Tipo do usuário" = $_.UserType
+    }
+    $i++
+}
+
+$table | Format-Table -AutoSize
 
 $end = Get-Date
+
 $time = $end - $start
+
 Write-Host "Tempo: $($time.Hours):$($time.Minutes):$($time.Seconds)"
