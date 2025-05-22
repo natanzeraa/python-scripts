@@ -31,7 +31,7 @@ $startDateObj = Get-ValidDate "📅 Insira a data de início (dd-MM-yyyy)"
 
 $endDateObj = Get-ValidDate "📅 Insira a data final (dd-MM-yyyy)"
 
-$guestOrMemberPreference = Read-Host "Para exibir Convidados (Guest) | Membros (Member) | Ambos (Pressione Enter) "
+$guestOrMemberPreference = Read-Host "🤔 Para exibir Convidados (Guest) | Membros (Member) | Ambos (Pressione Enter) "
 
 $startDate = $startDateObj.ToString("yyyy-MM-ddTHH:mm:ssZ")
 
