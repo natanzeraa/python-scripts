@@ -31,6 +31,8 @@ $startDateObj = Get-ValidDate "📅 Insira a data de início (dd-MM-yyyy)"
 
 $endDateObj = Get-ValidDate "📅 Insira a data final (dd-MM-yyyy)"
 
+$guestOrMemberPreference = Read-Host "Para exibir Convidados (Guest) | Membros (Member) | Ambos (Pressione Enter) "
+
 $startDate = $startDateObj.ToString("yyyy-MM-ddTHH:mm:ssZ")
 
 $endDate = $endDateObj.ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -55,15 +57,27 @@ function Get-UsersWithCreationDate($users) {
         
         if (![string]::IsNullOrWhiteSpace($userMail)) {
             try {
-                $fullUser = Get-MgUser -Filter "mail eq '$userMail'" -Property DisplayName, Mail, UserPrincipalName, CreatedDateTime, LastPasswordChangeDateTime, AccountEnabled, UserType
-                $results += [PSCustomObject]@{
-                    Name                       = $fullUser.DisplayName
-                    Mail                       = $fullUSer.Mail
-                    UPN                        = $fullUser.UserPrincipalName
-                    CreatedDateTime            = $fullUser.CreatedDateTime
-                    LastPasswordChangeDateTime = $fullUser.LastPasswordChangeDateTime
-                    AccountEnabled             = $fullUser.AccountEnabled ? "Sim" : "Não"
-                    UserType                   = if ($fullUser.UserType -eq "Guest") { "Convidado" } else { "Membro" }
+                $filter = ""
+
+                if ($guestOrMemberPreference.ToLower() -eq "guest" -or $guestOrMemberPreference.ToLower() -eq "member") {
+                    $filter += "mail eq '$userMail' and userType eq '$guestOrMemberPreference'"
+                }
+                else {
+                    $filter += "mail eq '$userMail'"
+                }
+
+                $fullUser = Get-MgUser -Filter $filter -Property DisplayName, Mail, UserPrincipalName, CreatedDateTime, LastPasswordChangeDateTime, AccountEnabled, UserType
+
+                if ($fullUser) {
+                    $results += [PSCustomObject]@{
+                        Name                       = $fullUser.DisplayName
+                        Mail                       = $fullUSer.Mail
+                        UPN                        = $fullUser.UserPrincipalName
+                        CreatedDateTime            = $fullUser.CreatedDateTime
+                        LastPasswordChangeDateTime = $fullUser.LastPasswordChangeDateTime
+                        AccountEnabled             = $fullUser.AccountEnabled ? "Sim" : "Não"
+                        UserType                   = if ($fullUser.UserType -eq "Guest") { "Convidado" } else { "Membro" }
+                    }
                 }
             }
             catch {
